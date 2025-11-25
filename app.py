@@ -1,6 +1,3 @@
-pip install streamlit praat-parselmouth textgrid matplotlib pandas
-streamlit run app.py
-
 import streamlit as st
 import numpy as np
 import pandas as pd
