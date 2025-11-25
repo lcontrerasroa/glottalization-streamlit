@@ -454,5 +454,6 @@ Le protocole d’analyse et les mesures sont inspirés de :
 Cette application a été développée par Leonardo Contreras Roa à partir   
 d’un notebook Python, avec l’aide de l’assistant IA ChatGPT pour l’adaptation  
 du code, la structuration du pipeline d’analyse et la création de l’interface Streamlit.
+
 https://leonardocontrerasroa.com
 """)
