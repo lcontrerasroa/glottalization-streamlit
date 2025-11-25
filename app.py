@@ -332,7 +332,6 @@ def process_pair(word: str,
 # =========================
 
 st.title("Analyse V–t–(V / Cson) & glottalisation")
-st.write("Petite app pour que les étudiant·e·s uploadent leurs paires wav + TextGrid et récupèrent les résultats + CSV.")
 
 uploaded_files = st.file_uploader(
     "Uploader les fichiers .wav et .TextGrid (plusieurs à la fois)",
@@ -391,3 +390,32 @@ else:
         )
     else:
         st.warning("Aucun token détecté dans les fichiers fournis.")
+
+# =========================
+# Bloc "À propos" en bas de page
+# =========================
+
+st.markdown("""
+---
+### À propos de cette application
+
+Cette application propose un outil léger pour le calcul rapide de l’autocorrélation dans des séquences de type **V–t–V** ou **V–t–C[+son]**, à partir de paires annotées `.wav` + `.TextGrid`.  
+Elle permet notamment :
+
+- l’upload sécurisé de fichiers audio et TextGrid,
+- l’extraction automatique des contextes VtV et VtC[+sonorant],
+- le calcul du **peak autocorrelation** pour chaque token,
+- l’affichage des graphiques (waveform + autocorrélation),
+- et l’export des résultats sous forme de **fichier CSV**.
+
+Le protocole d’analyse et les mesures sont inspirés de :
+
+> **Garellek, M. (2023).**  
+> *Measuring incompleteness: Acoustic correlates of glottal articulations.*  
+> *Journal of the International Phonetic Association*, 53(3), 449–474.  
+> https://doi.org/10.1017/S002510032200006X
+
+Cette application a été développée à partir d’un notebook Python,  
+avec l’aide de l’assistant IA ChatGPT pour l’adaptation du code,  
+la structuration du pipeline d’analyse et la création de l’interface Streamlit.
+""")
