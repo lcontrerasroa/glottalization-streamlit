@@ -283,21 +283,28 @@ def process_pair(word: str,
                  tg_path: Path,
                  rows: list):
     """
-    Ici je traite UNE paire wav + TextGrid et je pousse les lignes dans `rows`.
-    Je renvoie uniquement `rows` modifié (liste de dicts).
+    Traitement d'une paire wav + TextGrid :
+    - extraction des tokens VtV / VtCson
+    - calcul autocorr
+    - génération figure
+    - ajout ligne au tableau pour CSV
     """
+
     st.markdown(f"### Mot **{word}** – fichier `{wav_path.name}`")
 
+    # Charger audio + TextGrid
     sound = parselmouth.Sound(str(wav_path))
     tg = TextGrid.fromFile(str(tg_path))
 
-    tokens = find_vt_like_tokens(tg, tier_name=TIER_NAME)
+    # Tokens VtV / VtCson
+    tokens = find_vt_like_tokens(tg)
     st.write(f"Nombre de tokens VtV / VtCson : {len(tokens)}")
 
     if not tokens:
         return rows
 
     for idx, token in enumerate(tokens, start=1):
+        # Calcul de l'autocorrélation
         times, peaks = short_time_autocorr_track(
             sound, token["start"], token["end"]
         )
@@ -306,19 +313,23 @@ def process_pair(word: str,
         min_peak = float(np.nanmin(peaks))
         max_peak = float(np.nanmax(peaks))
 
+        # Contexte orthographique
         ort_label = get_overlapping_labels(
             tg, ORT_TIER_NAME, token["start"], token["end"]
         )
 
-        # Log textuel, façon notebook
-        st.text(
+        # Construire info_line AVANT l’appel à plot_token
+        info_line = (
             f"Token {idx:02d} {token['pattern']}: "
             f"{token['prev_label']} - {token['t_label']} - {token['next_label']} | "
-            f"ORT-MAU: '{ort_label}' | "
-            f"peak_auto: mean={mean_peak:.3f}, min={min_peak:.3f}, max={max_peak:.3f}"
+            f"ORT: '{ort_label}' | "
+            f"peak_auto mean={mean_peak:.3f}, min={min_peak:.3f}, max={max_peak:.3f}"
         )
 
-        # Figure
+        # Log texte
+        st.text(info_line)
+
+        # Figure corrigée (texte en bas)
         fig = plot_token(
             sound,
             token,
@@ -329,8 +340,7 @@ def process_pair(word: str,
         )
         st.pyplot(fig)
 
-
-        # Ligne du futur DataFrame
+        # Ajouter une ligne pour le CSV
         rows.append({
             "word": word,
             "filename": wav_path.name,
@@ -350,6 +360,7 @@ def process_pair(word: str,
         })
 
     return rows
+
 
 
 # =========================
