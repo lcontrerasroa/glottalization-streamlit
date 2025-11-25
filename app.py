@@ -451,7 +451,8 @@ Le protocole d’analyse et les mesures sont inspirés de :
 > *Journal of the International Phonetic Association*, 53(3), 449–474.  
 > https://doi.org/10.1017/S002510032200006X
 
-Cette application a été développée à partir d’un notebook Python,  
-avec l’aide de l’assistant IA ChatGPT pour l’adaptation du code,  
-la structuration du pipeline d’analyse et la création de l’interface Streamlit.
+Cette application a été développée par Leonardo Contreras Roa à partir   
+d’un notebook Python, avec l’aide de l’assistant IA ChatGPT pour l’adaptation  
+du code, la structuration du pipeline d’analyse et la création de l’interface Streamlit.
+https://leonardocontrerasroa.com
 """)
