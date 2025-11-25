@@ -222,50 +222,55 @@ def plot_token(sound: parselmouth.Sound,
                title_prefix: str,
                info_line: str):
     """
-    Version app web : texte d’info en BAS pour éviter toute superposition.
+    Version app web : texte d’info EN BAS pour éviter toute superposition
+    avec le titre ou le graphe. Compatible avec Streamlit.
     """
 
+    # Extraction du segment sonore correspondant au token
     snd = sound.extract_part(from_time=token["start"],
                              to_time=token["end"],
                              preserve_times=True)
 
-    x = snd.values[0]
+    x = snd.values[0]  # signal
     t_axis = np.linspace(snd.xmin, snd.xmax, len(x)) - token["start"]
     times_rel = times - token["start"]
 
     t_t_start = token["t_start"] - token["start"]
     t_t_end = token["t_end"] - token["start"]
 
+    # Figure
     fig, ax = plt.subplots(2, 1, figsize=(6, 4), sharex=True)
 
-    # Waveform
+    # ---------- Waveform ----------
     ax[0].plot(t_axis, x)
     ax[0].axvspan(t_t_start, t_t_end, alpha=0.2)
     ax[0].set_ylabel("Amplitude")
 
-    # Peak d’autocorr
+    # ---------- Peak autocorr ----------
     ax[1].plot(times_rel, peaks)
     ax[1].axvspan(t_t_start, t_t_end, alpha=0.2)
     ax[1].set_ylim(0.5, 1.0)
-    ax[1].set_xlabel("Normalized time (s)")
+    ax[1].set_xlabel("Temps relatif (s)")
     ax[1].set_ylabel("Peak autocorr")
 
-    # Titre principal
+    # ---------- Titre principal ----------
     fig.suptitle(f"{title_prefix} {token['pattern']}", fontsize=12)
 
-    # Texte d’info EN BAS, discret et propre
+    # ---------- Texte d’info EN BAS ----------
     fig.text(
-        0.5, 0.02,
+        0.5, 0.02,              # position centrale en bas
         info_line,
         ha="center",
         va="bottom",
         fontsize=7
     )
 
-    # On garde un peu d’espace en bas pour le texte
+    # ---------- Ajustement du layout ----------
+    # On réserve 6% d’espace en bas pour éviter que le texte touche l’axe X
     fig.tight_layout(rect=(0, 0.06, 1, 1))
 
     return fig
+
 
 
 
@@ -314,9 +319,16 @@ def process_pair(word: str,
         )
 
         # Figure
-        fig = plot_token(sound, token, times, peaks,
-                         title_prefix=f"Token {idx}")
+        fig = plot_token(
+            sound,
+            token,
+            times,
+            peaks,
+            title_prefix=f"Token {idx}",
+            info_line=info_line,
+        )
         st.pyplot(fig)
+
 
         # Ligne du futur DataFrame
         rows.append({
