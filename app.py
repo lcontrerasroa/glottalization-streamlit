@@ -215,16 +215,16 @@ def short_time_autocorr_track(sound: parselmouth.Sound,
 # =========================
 # Plot d'un token -> figure
 # =========================
-
 def plot_token(sound: parselmouth.Sound,
                token: dict,
                times: np.ndarray,
                peaks: np.ndarray,
-               title_prefix: str = ""):
+               title_prefix: str,
+               info_line: str):
     """
-    Je fais la figure waveform + peak d'autocorr pour un token.
-    Je renvoie la figure pour que Streamlit fasse st.pyplot(fig).
+    Version app web : texte d’info en BAS pour éviter toute superposition.
     """
+
     snd = sound.extract_part(from_time=token["start"],
                              to_time=token["end"],
                              preserve_times=True)
@@ -243,17 +243,30 @@ def plot_token(sound: parselmouth.Sound,
     ax[0].axvspan(t_t_start, t_t_end, alpha=0.2)
     ax[0].set_ylabel("Amplitude")
 
-    # Peak autocorr
+    # Peak d’autocorr
     ax[1].plot(times_rel, peaks)
     ax[1].axvspan(t_t_start, t_t_end, alpha=0.2)
-    ax[1].set_ylim(0.5, 1)
-    ax[1].set_xlabel("Temps relatif (s)")
+    ax[1].set_ylim(0.5, 1.0)
+    ax[1].set_xlabel("Normalized time (s)")
     ax[1].set_ylabel("Peak autocorr")
 
-    fig.suptitle(f"{title_prefix} {token['pattern']}")
-    fig.tight_layout()
+    # Titre principal
+    fig.suptitle(f"{title_prefix} {token['pattern']}", fontsize=12)
+
+    # Texte d’info EN BAS, discret et propre
+    fig.text(
+        0.5, 0.02,
+        info_line,
+        ha="center",
+        va="bottom",
+        fontsize=7
+    )
+
+    # On garde un peu d’espace en bas pour le texte
+    fig.tight_layout(rect=(0, 0.06, 1, 1))
 
     return fig
+
 
 
 # =========================
