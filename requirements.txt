@@ -1,6 +1,6 @@
-streamlit
-pandas
-matplotlib
-numpy
-praat-parselmouth
-textgrid
+streamlit>=1.30
+numpy>=1.23
+pandas>=1.5
+matplotlib>=3.7
+praat-parselmouth>=0.4.3
+textgrid>=1.5
