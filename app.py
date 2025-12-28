@@ -117,42 +117,120 @@ def find_vt_like_tokens(tg: TextGrid,
                         t_labels,
                         vowels: set,
                         sonorants: set):
+    """
+    Détecte des tokens avec /t/ central dans des contextes :
+      - V t V
+      - V t C[+son]
+      - V C t V
+      - V C t C[+son]
+      - V C C t V
+      - V C C t C[+son]
+
+    Contrainte gauche : on cherche une voyelle parmi les 3 segments
+    précédant le /t/ (V, VC ou VCC), sans autre voyelle entre cette
+    voyelle et le /t/.
+
+    Contexte droit : juste après /t/, on garde uniquement V ou C[+son].
+
+    Champs ajoutés :
+      - left_vowel_label     : label de la voyelle d’ancrage
+      - left_context_labels  : labels de tous les segments de gauche (V/VC/VCC)
+      - left_context_class   : "V", "VC" ou "VCC"
+    """
     tier = get_tier(tg, seg_tier_name)
     ints = tier.intervals
     tokens = []
 
     for i, seg in enumerate(ints):
+        # on ne s'intéresse qu'aux /t/ (et variantes)
         if seg.mark not in t_labels:
             continue
-        if i == 0 or i == len(ints) - 1:
+
+        # besoin au moins d'un segment à droite
+        if i == len(ints) - 1:
             continue
 
-        left = ints[i - 1]
+        # --------- Chercher la voyelle de gauche (V, VC ou VCC) ----------
+        left_v_idx = None
+
+        # On regarde jusqu'à 3 segments à gauche : i-1, i-2, i-3
+        for back in range(1, 4):
+            j = i - back
+            if j < 0:
+                break
+            intv = ints[j]
+            if is_vowel(intv.mark, vowels):
+                left_v_idx = j
+                break
+
+        if left_v_idx is None:
+            # aucune voyelle trouvée dans la fenêtre (max VCCt)
+            continue
+
+        # Intervalles de la voyelle jusqu'au segment juste avant /t/
+        left_context_ints = ints[left_v_idx:i]
+
+        # On s'assure qu'il n'y a pas d'autre voyelle après celle d'ancrage
+        # (pour éviter des choses du type V V t)
+        has_extra_vowel = any(
+            is_vowel(intv.mark, vowels) for intv in left_context_ints[1:]
+        )
+        if has_extra_vowel:
+            continue
+
+        left_len = len(left_context_ints)  # 1 (=V), 2 (=VC), 3 (=VCC)
+        if left_len < 1:
+            continue  # paranoïa, ça ne devrait pas arriver
+
+        # Classe abstraite du contexte gauche : "V", "VC" ou "VCC"
+        left_context_class = "V" + "C" * (left_len - 1)
+
+        left_v_int = left_context_ints[0]
+        left_vowel_label = (left_v_int.mark or "").strip()
+        left_context_labels = " ".join(
+            (intv.mark or "").strip() for intv in left_context_ints
+        ).strip()
+
+        # --------- Contexte droit : V ou C[+son] immédiatement après /t/ ----------
         right = ints[i + 1]
 
-        # left must be vowel
-        if not is_vowel(left.mark, vowels):
-            continue
-
-        # right can be vowel or sonorant
         if is_vowel(right.mark, vowels):
-            pattern = "V_t_V"
+            right_pattern = "t_V"
         elif is_sonorant(right.mark, sonorants):
-            pattern = "V_t_Cson"
+            right_pattern = "t_Cson"
         else:
+            # on ne garde que V ou C[+son] à droite
             continue
 
-        tokens.append({
-            "prev_label": left.mark,
+        pattern = f"{left_context_class}_{right_pattern}"
+
+        # --------- Construction du token ----------
+        token = {
+            # contexte immédiat (utile pour les titres, inspection rapide)
+            "prev_label": ints[i - 1].mark if i > 0 else "",
             "t_label": seg.mark,
             "next_label": right.mark,
-            "start": float(left.minTime),
+
+            # nouveau : info de contexte gauche étendu
+            "left_vowel_label": left_vowel_label,
+            "left_context_labels": left_context_labels,   # ex: "æ s" ou "æ s k"
+            "left_context_class": left_context_class,     # "V", "VC" ou "VCC"
+
+            # bornes temporelles de la fenêtre vtX :
+            # du début de la voyelle de gauche à la fin du segment de droite
+            "start": float(left_v_int.minTime),
             "t_start": float(seg.minTime),
             "t_end": float(seg.maxTime),
             "end": float(right.maxTime),
+
             "pattern": pattern,
-        })
+        }
+
+        tokens.append(token)
+
     return tokens
+
+
 
 
 # =========================
